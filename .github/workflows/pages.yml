@@ -3,7 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - claude/nfl-prediction-dashboard-RutT1
+      - main
     paths:
       - 'docs/**'
   workflow_dispatch:
