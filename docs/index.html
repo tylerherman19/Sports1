@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NFL Prediction Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ─── HEADER ─────────────────────────────────────────────────── -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-title">
+        <span class="header-icon">🏈</span>
+        <h1>NFL Prediction Dashboard</h1>
+      </div>
+      <div class="header-meta">
+        <span id="last-updated" class="last-updated">Loading...</span>
+        <button onclick="resetSliders()" class="btn-reset" title="Reset all sliders to defaults">Reset Sliders</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ─── STATE MESSAGES ──────────────────────────────────────────── -->
+  <div id="loading-state" class="loading-banner" style="display:none">Loading NFL prediction data...</div>
+  <div id="error-state" class="error-banner" style="display:none"></div>
+
+  <!-- ─── MAIN LAYOUT ─────────────────────────────────────────────── -->
+  <div class="layout">
+
+    <!-- ─── SIDEBAR: SLIDERS ──────────────────────────────────────── -->
+    <aside class="sidebar">
+      <h2 class="sidebar-title">Model Controls</h2>
+
+      <!-- ELO Parameters -->
+      <section class="slider-group">
+        <h3 class="slider-group-title">ELO Parameters</h3>
+
+        <div class="slider-row">
+          <label>K-Factor <span class="slider-hint">(sensitivity)</span></label>
+          <div class="slider-control">
+            <input type="range" id="slider-k-factor" min="10" max="40" step="1" class="slider">
+            <span id="k-factor-val" class="slider-value">20</span>
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <label>Home Field Advantage <span class="slider-hint">(ELO pts)</span></label>
+          <div class="slider-control">
+            <input type="range" id="slider-home-field" min="0" max="80" step="1" class="slider">
+            <span id="home-field-val" class="slider-value">65</span>
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <label>Recent Form Weight</label>
+          <div class="slider-control">
+            <input type="range" id="slider-form-blend" min="0" max="100" step="5" class="slider">
+            <span id="form-blend-val" class="slider-value">30%</span>
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <label>Head-to-Head Weight</label>
+          <div class="slider-control">
+            <input type="range" id="slider-h2h-weight" min="0" max="100" step="5" class="slider">
+            <span id="h2h-weight-val" class="slider-value">20%</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Adjustment Scales -->
+      <section class="slider-group">
+        <h3 class="slider-group-title">Adjustment Scales</h3>
+
+        <div class="slider-row">
+          <label>SOS Weight</label>
+          <div class="slider-control">
+            <input type="range" id="slider-sos-weight" min="0" max="2" step="0.1" class="slider">
+            <span id="sos-weight-val" class="slider-value">1.0</span>
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <label>Turnover Impact</label>
+          <div class="slider-control">
+            <input type="range" id="slider-turnover-scale" min="0" max="2" step="0.1" class="slider">
+            <span id="turnover-scale-val" class="slider-value">1.0</span>
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <label>Rest &amp; Travel Scale</label>
+          <div class="slider-control">
+            <input type="range" id="slider-rest-travel" min="0" max="2" step="0.1" class="slider">
+            <span id="rest-travel-val" class="slider-value">1.0</span>
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <label>Time Decay λ <span class="slider-hint">(higher = recency matters more)</span></label>
+          <div class="slider-control">
+            <input type="range" id="slider-time-decay" min="0.01" max="0.15" step="0.01" class="slider">
+            <span id="time-decay-val" class="slider-value">0.05</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Ensemble Weights -->
+      <section class="slider-group">
+        <h3 class="slider-group-title">Ensemble Weights <span class="slider-hint">(must sum to 100%)</span></h3>
+
+        <div class="slider-row">
+          <label>Logistic Regression</label>
+          <div class="slider-control">
+            <input type="range" id="slider-weight-lr" min="0" max="100" step="5" class="slider weight-slider">
+            <span id="weight-lr-val" class="slider-value">30%</span>
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <label>XGBoost</label>
+          <div class="slider-control">
+            <input type="range" id="slider-weight-xgb" min="0" max="100" step="5" class="slider weight-slider">
+            <span id="weight-xgb-val" class="slider-value">25%</span>
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <label>ELO Rating</label>
+          <div class="slider-control">
+            <input type="range" id="slider-weight-elo" min="0" max="100" step="5" class="slider weight-slider">
+            <span id="weight-elo-val" class="slider-value">20%</span>
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <label>Pythagorean</label>
+          <div class="slider-control">
+            <input type="range" id="slider-weight-pyth" min="0" max="100" step="5" class="slider weight-slider">
+            <span id="weight-pyth-val" class="slider-value">15%</span>
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <label>Efficiency</label>
+          <div class="slider-control">
+            <input type="range" id="slider-weight-eff" min="0" max="100" step="5" class="slider weight-slider">
+            <span id="weight-eff-val" class="slider-value">10%</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Injury Discounts (collapsed) -->
+      <section class="slider-group">
+        <h3 class="slider-group-title collapsible-header" onclick="toggleInjuryPanel()">
+          Per-Team Injury Discounts
+          <span class="collapse-icon" id="injury-collapse-icon">▶</span>
+        </h3>
+        <div id="injury-sliders-panel" style="display:none">
+          <p class="slider-hint">Subtract ELO points for teams with key injuries</p>
+          <div id="injury-sliders-container"></div>
+        </div>
+      </section>
+    </aside>
+
+    <!-- ─── MAIN CONTENT ──────────────────────────────────────────── -->
+    <main class="main-content">
+
+      <!-- SECTION 1: This Week's Games -->
+      <section class="dashboard-section" id="section-games">
+        <h2 class="section-title">This Week's Games</h2>
+        <div id="games-container" class="games-grid">
+          <div class="loading-placeholder">Loading games...</div>
+        </div>
+      </section>
+
+      <!-- SECTION 3: Matchup Predictor -->
+      <section class="dashboard-section" id="section-predictor">
+        <h2 class="section-title">Matchup Predictor</h2>
+        <div class="predictor-controls">
+          <div class="predictor-team-select">
+            <label>Away Team</label>
+            <select id="predictor-away" class="team-select"></select>
+          </div>
+          <div class="predictor-at">@</div>
+          <div class="predictor-team-select">
+            <label>Home Team</label>
+            <select id="predictor-home" class="team-select"></select>
+          </div>
+        </div>
+        <div id="predictor-result" class="predictor-result">
+          <div class="loading-placeholder">Select teams above to see prediction</div>
+        </div>
+      </section>
+
+      <!-- SECTION 4: ELO Leaderboard -->
+      <section class="dashboard-section" id="section-leaderboard">
+        <h2 class="section-title">ELO Leaderboard <span class="section-hint">— Click column headers to sort</span></h2>
+        <div id="leaderboard-container" class="leaderboard-wrapper">
+          <div class="loading-placeholder">Loading leaderboard...</div>
+        </div>
+      </section>
+
+      <!-- SECTION 5: Model Performance -->
+      <section class="dashboard-section" id="section-performance">
+        <h2 class="section-title">Model Performance</h2>
+        <div id="performance-container" class="performance-wrapper">
+          <div class="loading-placeholder">Loading model metrics...</div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ─── FOOTER ──────────────────────────────────────────────────── -->
+  <footer class="site-footer">
+    <p>Data: FiveThirtyEight historical NFL ELO · ESPN API · The Odds API · Pro Football Reference</p>
+    <p>For reference and entertainment only. Not financial or betting advice. Kelly Criterion figures are educational only.</p>
+  </footer>
+
+  <!-- ─── SCRIPTS ─────────────────────────────────────────────────── -->
+  <script src="js/teams.js"></script>
+  <script src="js/models.js"></script>
+  <script src="js/sliders.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+
+  <script>
+    function toggleInjuryPanel() {
+      const panel = document.getElementById("injury-sliders-panel");
+      const icon  = document.getElementById("injury-collapse-icon");
+      if (panel.style.display === "none") {
+        panel.style.display = "block";
+        icon.textContent = "▼";
+      } else {
+        panel.style.display = "none";
+        icon.textContent = "▶";
+      }
+    }
+  </script>
+
+</body>
+</html>
