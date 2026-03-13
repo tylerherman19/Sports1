@@ -19,9 +19,9 @@ env/
 ENV/
 
 # Intermediate data (large files, not committed)
-data/
+# Only ignore top-level data/ dir; docs/data/ (JSON exports) must be committed
+/data/
 *.parquet
-*.csv
 *.feather
 
 # Secrets / environment

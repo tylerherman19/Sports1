@@ -237,6 +237,11 @@ def export_team_ratings(
             )
             elo_trend = "up" if recent_wins >= 2 else ("down" if recent_wins == 0 else "neutral")
 
+        # recent_form_elo: base ELO shifted by recent win-rate signal
+        # last5_win_rate 1.0 → +50 ELO, 0.5 → no change, 0.0 → -50 ELO
+        base_elo = posterior["mu"]
+        recent_form_elo = round(base_elo + (last5_win_rate - 0.5) * 100, 1)
+
         teams_out.append({
             "abbrev": team,
             "record": f"{wins}-{losses}" + (f"-{ties}" if ties > 0 else ""),
@@ -252,6 +257,7 @@ def export_team_ratings(
             "hierarchical": hier,
             "playoff_prob": round(monte_carlo_playoffs.get(team, 0.5), 4),
             "last5_win_rate": round(last5_win_rate, 4),
+            "recent_form_elo": recent_form_elo,
             "elo_trend": elo_trend,
         })
 

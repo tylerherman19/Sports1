@@ -265,6 +265,22 @@ def run_pipeline():
         export_odds,
     )
 
+    # Compute real last5_win_rate per team from completed season games
+    last5_win_rates = {}
+    for team in current_elos:
+        team_games = [
+            g for g in season_games
+            if (g.get("home_team") == team or g.get("away_team") == team)
+            and (g.get("home_score", 0) > 0 or g.get("away_score", 0) > 0)
+        ]
+        last5 = team_games[-5:]
+        wins = sum(
+            1 for g in last5
+            if (g["home_team"] == team and g["home_score"] > g["away_score"])
+            or (g["away_team"] == team and g["away_score"] > g["home_score"])
+        )
+        last5_win_rates[team] = wins / max(1, len(last5)) if last5 else 0.5
+
     # Build team_elos dict with full info for export
     team_elos_full = {}
     for team in current_elos:
@@ -274,7 +290,7 @@ def run_pipeline():
             "sigma": posterior["sigma"],
             "elo_raw": current_elos[team],
             "elo_diff": 0.0,  # filled per-game
-            "last5_win_rate": 0.5,
+            "last5_win_rate": last5_win_rates.get(team, 0.5),
         }
 
     export_games(

@@ -1,0 +1,20 @@
+{
+  "updated": "1970-01-01T00:00:00Z",
+  "logistic_regression": {
+    "intercept": 0.0,
+    "coefficients": {
+      "elo_diff": 0.0,
+      "offensive_rating_diff": 0.0,
+      "defensive_rating_diff": 0.0,
+      "home_field": 0.0,
+      "rest_days_diff": 0.0,
+      "pythagorean_diff": 0.0,
+      "net_efficiency_diff": 0.0,
+      "turnover_diff_adjusted": 0.0,
+      "travel_distance_diff": 0.0,
+      "last5_win_rate_diff": 0.0
+    }
+  },
+  "xgboost": {},
+  "xgb_game_probs": {}
+}
